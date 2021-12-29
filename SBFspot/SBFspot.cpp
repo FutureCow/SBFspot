@@ -1007,105 +1007,116 @@ E_SBFSPOT SetPlantTime(time_t ndays, time_t lowerlimit, time_t upperlimit)
     if (DEBUG_NORMAL)
 		std::cout <<"SetPlantTime()" << std::endl;
 
-    do
+    time_t localtime = time(NULL);
+    int32_t dst = 0;
+    int32_t tzOffset = get_tzOffset(&dst);
+
+    if (VERBOSE_NORMAL)
     {
-        pcktID++;
-        writePacketHeader(pcktBuf, 0x01, RootDeviceAddress);
-        writePacket(pcktBuf, 0x10, 0xA0, 0, anySUSyID, anySerial);
-        writeLong(pcktBuf, 0xF000020A);
-        writeLong(pcktBuf, 0x00236D00);
-        writeLong(pcktBuf, 0x00236D00);
-        writeLong(pcktBuf, 0x00236D00);
-        writeLong(pcktBuf, 0);
-        writeLong(pcktBuf, 0);
-        writeLong(pcktBuf, 0);
-        writeLong(pcktBuf, 0);
-        writeLong(pcktBuf, 1);
-        writeLong(pcktBuf, 1);
-        writePacketTrailer(pcktBuf);
-        writePacketLength(pcktBuf);
+        printf("Local Time: %s\n", strftime_t(DateTimeFormat, localtime));
+        printf("TZ offset (s): %ld\n", tzOffset);
     }
-    while (!isCrcValid(pcktBuf[packetposition-3], pcktBuf[packetposition-2]));
 
-    bthSend(pcktBuf);
+////    do
+////    {
+////        pcktID++;
+////        writePacketHeader(pcktBuf, 0x01, RootDeviceAddress);
+////        writePacket(pcktBuf, 0x10, 0xA0, 0, anySUSyID, anySerial);
+////        writeLong(pcktBuf, 0xF000020A);
+////        writeLong(pcktBuf, 0x00236D00);
+////        writeLong(pcktBuf, 0x00236D00);
+////        writeLong(pcktBuf, 0x00236D00);
+////        writeLong(pcktBuf, 0);
+////        writeLong(pcktBuf, 0);
+////        writeLong(pcktBuf, 0);
+////        writeLong(pcktBuf, 0);
+////        writeLong(pcktBuf, 1);
+////        writeLong(pcktBuf, 1);
+////        writePacketTrailer(pcktBuf);
+////        writePacketLength(pcktBuf);
+////    }
+////    while (!isCrcValid(pcktBuf[packetposition-3], pcktBuf[packetposition-2]));
+////
+////    bthSend(pcktBuf);
+////
+////	time_t hosttime = time(NULL);
+////
+////	// Inverter returns UTC time, TZ offset and DST
+////	// Packet ID is mismatched
+////	E_SBFSPOT rc = getPacket(addr_unknown, 1);
+////
+////	if ((rc == E_OK) && (packetposition == 72))
+////	{
+////		if (get_long(pcktBuf + 41) != 0x00236D00)
+////		{
+////		    if (DEBUG_NORMAL) std::cout << "Unexpected packet received!" << std::endl;
+////			return E_COMM;
+////		}
+////		time_t invCurrTime = get_long(pcktBuf + 45);
+////		time_t invLastTimeSet = get_long(pcktBuf + 49);
+////		int tz = get_long(pcktBuf + 57) & 0xFFFFFFFE;
+////		int dst = get_long(pcktBuf + 57) & 0x00000001;
+////		int magic = get_long(pcktBuf + 61); // What's this?
+////
+////		time_t timediff = invCurrTime - hosttime;
+////
+////		if (VERBOSE_NORMAL)
+////		{
+////			std::cout << "Local Host Time: " << strftime_t(DateTimeFormat, hosttime) << std::endl;
+////			std::cout << "Plant Time     : " << strftime_t(DateTimeFormat, invCurrTime) << " (" << (timediff>0 ? "+":"") << timediff << " sec)" << std::endl;
+////			std::cout << "TZ offset      : " << tz << " sec - DST: " << (dst == 1? "On":"Off") << std::endl;
+////			std::cout << "Last Time Set  : " << strftime_t(DateTimeFormat, invLastTimeSet) << std::endl;
+////		}
+////
+////		// Time difference between plant and host should be in the range of 1-3600 seconds
+////		// This is to avoid the plant time is wrongly set when host time is not OK
+////		// This check can be overruled by setting lower and upper limits = 0 (SBFspot -settime)
+////		timediff = abs(timediff);
+////
+////		if ((lowerlimit == 0) && (upperlimit == 0)) // Ignore limits? (-settime command line argument)
+////		{
+////			// Plant time is OK - nothing to do
+////			if (timediff == 0) return E_OK;
+////		}
+////		else
+////		{
+////			// Time difference is too big - nothing to do
+////			if (timediff > upperlimit)
+////			{
+////				if (VERBOSE_NORMAL)
+////				{
+////					std::cout << "The time difference between inverter/host is more than " << upperlimit << " seconds.\n";
+////					std::cout << "As a precaution the plant time won't be adjusted.\n";
+////					std::cout << "To overrule this behaviour, execute SBFspot -settime" << std::endl;
+////				}
+////
+////				return E_OK;
+////			}
+////
+////			// Time difference is too small - nothing to do
+////			if (timediff < lowerlimit) return E_OK;
+////
+////			// Calculate #days of last time set
+////			time_t daysago = ((hosttime - hosttime % 86400) - (invLastTimeSet - invLastTimeSet % 86400)) / 86400;
+////
+////			if (daysago < ndays)
+////			{
+////				if (VERBOSE_NORMAL)
+////				{
+////					std::cout << "Time was already adjusted ";
+////					if (ndays == 1)
+////						std::cout << "today" << std::endl;
+////					else
+////						std::cout << "in last " << ndays << " days" << std::endl;
+////				}
+////
+////				return E_OK;
+////			}
+////		}
+////		// All checks passed - OK to set the time
 
-	time_t hosttime = time(NULL);
-
-	// Inverter returns UTC time, TZ offset and DST
-	// Packet ID is mismatched
-	E_SBFSPOT rc = getPacket(addr_unknown, 1);
-
-	if ((rc == E_OK) && (packetposition == 72))
-	{
-		if (get_long(pcktBuf + 41) != 0x00236D00)
-		{
-		    if (DEBUG_NORMAL) std::cout << "Unexpected packet received!" << std::endl;
-			return E_COMM;
-		}
-		time_t invCurrTime = get_long(pcktBuf + 45);
-		time_t invLastTimeSet = get_long(pcktBuf + 49);
-		int tz = get_long(pcktBuf + 57) & 0xFFFFFFFE;
-		int dst = get_long(pcktBuf + 57) & 0x00000001;
-		int magic = get_long(pcktBuf + 61); // What's this?
-
-		time_t timediff = invCurrTime - hosttime;
-
-		if (VERBOSE_NORMAL)
-		{
-			std::cout << "Local Host Time: " << strftime_t(DateTimeFormat, hosttime) << std::endl;
-			std::cout << "Plant Time     : " << strftime_t(DateTimeFormat, invCurrTime) << " (" << (timediff>0 ? "+":"") << timediff << " sec)" << std::endl;
-			std::cout << "TZ offset      : " << tz << " sec - DST: " << (dst == 1? "On":"Off") << std::endl;
-			std::cout << "Last Time Set  : " << strftime_t(DateTimeFormat, invLastTimeSet) << std::endl;
-		}
-
-		// Time difference between plant and host should be in the range of 1-3600 seconds
-		// This is to avoid the plant time is wrongly set when host time is not OK
-		// This check can be overruled by setting lower and upper limits = 0 (SBFspot -settime)
-		timediff = abs(timediff);
-
-		if ((lowerlimit == 0) && (upperlimit == 0)) // Ignore limits? (-settime command line argument)
-		{
-			// Plant time is OK - nothing to do
-			if (timediff == 0) return E_OK;
-		}
-		else
-		{
-			// Time difference is too big - nothing to do
-			if (timediff > upperlimit)
-			{
-				if (VERBOSE_NORMAL)
-				{
-					std::cout << "The time difference between inverter/host is more than " << upperlimit << " seconds.\n";
-					std::cout << "As a precaution the plant time won't be adjusted.\n";
-					std::cout << "To overrule this behaviour, execute SBFspot -settime" << std::endl;
-				}
-
-				return E_OK;
-			}
-
-			// Time difference is too small - nothing to do
-			if (timediff < lowerlimit) return E_OK;
-
-			// Calculate #days of last time set
-			time_t daysago = ((hosttime - hosttime % 86400) - (invLastTimeSet - invLastTimeSet % 86400)) / 86400;
-
-			if (daysago < ndays)
-			{
-				if (VERBOSE_NORMAL)
-				{
-					std::cout << "Time was already adjusted ";
-					if (ndays == 1)
-						std::cout << "today" << std::endl;
-					else
-						std::cout << "in last " << ndays << " days" << std::endl;
-				}
-
-				return E_OK;
-			}
-		}
-
-		// All checks passed - OK to set the time
-
+    if ((lowerlimit == 0) && (upperlimit == 0)) // Ignore limits? (-settime command line argument)
+    {
 		if (VERBOSE_NORMAL)
 		{
 			std::cout << "Adjusting plant time..." << std:: endl;
@@ -1121,12 +1132,12 @@ E_SBFSPOT SetPlantTime(time_t ndays, time_t lowerlimit, time_t upperlimit)
 			writeLong(pcktBuf, 0x00236D00);
 			writeLong(pcktBuf, 0x00236D00);
 			// Get new host time
-			hosttime = time(NULL);
-			writeLong(pcktBuf, hosttime);
-			writeLong(pcktBuf, hosttime);
-			writeLong(pcktBuf, hosttime);
-			writeLong(pcktBuf, tz | dst);
-			writeLong(pcktBuf, ++magic);
+            localtime = time(NULL);
+			writeLong(pcktBuf, localtime);
+			writeLong(pcktBuf, localtime);
+			writeLong(pcktBuf, localtime);
+			writeLong(pcktBuf, tzOffset | dst);
+			writeLong(pcktBuf, 1);
 			writeLong(pcktBuf, 1);
 			writePacketTrailer(pcktBuf);
 			writePacketLength(pcktBuf);
@@ -1136,15 +1147,14 @@ E_SBFSPOT SetPlantTime(time_t ndays, time_t lowerlimit, time_t upperlimit)
 		bthSend(pcktBuf);
 		// No response expected
 
-		std::cout << "New plant time is now " << strftime_t(DateTimeFormat, hosttime) << std::endl;
-	}
-	else
-		if (VERBOSE_NORMAL)
-		{
-			std::cout << "Failed to get current plant time (" << rc << ")" << std::endl;
-		}
-
-	return rc;
+		std::cout << "New plant time is now " << strftime_t(DateTimeFormat, localtime) << std::endl;
+    }
+////	else
+////		if (VERBOSE_NORMAL)
+////		{
+////			std::cout << "Failed to get current plant time (" << rc << ")" << std::endl;
+////		}
+    return E_OK; // rc;
 }
 
 
