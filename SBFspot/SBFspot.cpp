@@ -86,15 +86,6 @@ CONNECTIONTYPE ConnType = CT_NONE;
 TagDefs tagdefs = TagDefs();
 bool hasBatteryDevice = false; // Plant has 1 or more battery device(s)
 
-	/*******
-	* MQTT *
-	********/
-    if (cfg.continuousMqtt)
-    {
-        continuousMqtt(Inverters, &cfg);
-        return 0;
-    }
-
 //Free memory allocated by initialiseSMAConnection()
 void freemem(InverterData *inverters[])
 {
