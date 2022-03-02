@@ -1155,6 +1155,7 @@ int parseCmdline(int argc, char **argv, Config *cfg)
     cfg->startdate = 0;
     cfg->settime = 0;
     cfg->mqtt = 0;
+    cfg->continuousMqtt = 0;
 
     bool help_requested = false;
 
@@ -1405,6 +1406,9 @@ int parseCmdline(int argc, char **argv, Config *cfg)
 
         else if (stricmp(argv[i], "-mqtt") == 0)
             cfg->mqtt = 1;
+	    
+	else if (stricmp(argv[i], "-continuousMqtt") == 0)
+            cfg->continuousMqtt = 1;
 
         //Show Help
         else if (stricmp(argv[i], "-?") == 0)
