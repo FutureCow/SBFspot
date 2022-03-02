@@ -413,7 +413,6 @@ int Inverter::process()
             }
         }
     }
-
     // Open DB
 #if defined(USE_SQLITE) || defined(USE_MYSQL)
     if (!m_config.nosql)
@@ -426,6 +425,12 @@ int Inverter::process()
     }
 #endif
 
+    if (cfg.continuousMqtt)
+    {
+        continuousMqtt(Inverters, &cfg);
+        return 0;
+    }
+    
     exportSpotData();
 
     //SolarInverter -> Continue to get archive data
