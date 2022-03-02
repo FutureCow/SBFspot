@@ -69,6 +69,9 @@ DISCLAIMER:
 #include <boost/asio/ip/address.hpp>
 #include "mqtt.h"
 #include "mppt.h"
+#include <signal.h>
+#include <stdlib.h>
+#include "ContinuousMqtt.h"
 
 int MAX_CommBuf = 0;
 int MAX_pcktBuf = 0;
@@ -82,6 +85,15 @@ char DateFormat[32];
 CONNECTIONTYPE ConnType = CT_NONE;
 TagDefs tagdefs = TagDefs();
 bool hasBatteryDevice = false; // Plant has 1 or more battery device(s)
+
+	/*******
+	* MQTT *
+	********/
+    if (cfg.continuousMqtt)
+    {
+        continuousMqtt(Inverters, &cfg);
+        return 0;
+    }
 
 //Free memory allocated by initialiseSMAConnection()
 void freemem(InverterData *inverters[])
