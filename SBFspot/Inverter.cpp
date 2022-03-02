@@ -425,7 +425,7 @@ int Inverter::process()
     }
 #endif
 
-    if (cfg.continuousMqtt)
+    if (m_config.continuousMqtt)
     {
         continuousMqtt(Inverters, &cfg);
         return 0;
